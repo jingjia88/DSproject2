@@ -26,7 +26,7 @@ int **graph;
 int **dist;
 int **visited;
 int arr[3];
-bool rec = false;
+bool rec = false;bool battery = false;
 int **allocate_Memory(int rows,int cols);
 void distances(int i ,int j);
 void find_path(int p,int k,int pace);
@@ -65,7 +65,12 @@ int main(int argc, char *argv[])
     moves.push_back(direc(-1,0));
     moves.push_back(direc(0,1));
     moves.push_back(direc(0,-1));
-    distances(a,b);
+    try{
+        distances(a,b);
+    }catch(const char* msg){
+        cout<<msg<<endl;
+        return 0;
+    }
     //dist[a][b] = 82;
 
     //find_path
@@ -100,15 +105,24 @@ void distances(int i ,int j){
 //for(un,down,left,right)
 //  if(avaible)
 //      dist[i+R][j+C]=dist[i][j] + 1;
-
     for(unsigned int k = 0; k < moves.size() ;k++){
         R = moves[k].x;
         C = moves[k].y;
         if((i+R)<0 || (i+R)>rows-1 || (j+C)<0 ||(j+C)>cols-1 ||
                 (dist[i+R][j+C]!=0 &&dist[i+R][j+C] < dist[i][j] + 1)){continue;}
-        if(graph[i+R][j+C]==0){
+        if(!battery && graph[i+R][j+C]==0){
             dist[i+R][j+C] = dist[i][j] + 1;
-            distances(i+R,j+C);}
+            if(dist[i+R][j+C]>pace/2) throw "battery is not enough!";
+            distances(i+R,j+C);
+            battery = true;
+            continue;
+        }
+        if(graph[i+R][j+C]==0){
+            if(i == a && j==b) continue; 
+            dist[i+R][j+C] = dist[i][j] + 1;
+            if(dist[i+R][j+C]>pace/2) throw "battery is not enough!";
+            distances(i+R,j+C);
+        }
     }
     return ;
 }
@@ -116,20 +130,20 @@ int* next(int i ,int j,int p){
     //if out of battery,back to start point
     if(p <= pace/2 && home.size()>1){ 
         home.pop();
-        steps.push_back(home.top());
-        arr[0] = home.top().first;
-        arr[1] = home.top().second; 
+        steps.push_back(home.top()); 
+        arr[0] = i = home.top().first;
+        arr[1] = j = home.top().second; 
         arr[2] = --p;
+        visited[i][j]++;
         if(rec) record.push(home.top()); 
         if(!rec){
-            i = home.top().first;
-            j = home.top().second;
             for(unsigned int k = 0; k < moves.size() ;k++){
                 R = moves[k].x;
                 C = moves[k].y;
                 if((i+R)<0 || (i+R)>rows-1 || (j+C)<0 ||(j+C)>cols-1 || graph[i+R][j+C]!=0){continue;}
                 if(dist[i+R][j+C] == dist[i][j]+1 && visited[i+R][j+C]==0){
                     record.push(edge(i+R,j+C));
+                    record.push(edge(i,j));
                     rec=true;
                     break;
                 }
@@ -144,21 +158,20 @@ int* next(int i ,int j,int p){
     }
     //pop out the record path
     if(!record.empty() && p> pace/2){
+        if(record.top().first==a && record.top().second==b) record.pop();
         home.push(record.top());
         steps.push_back(record.top());
         arr[0] = i = record.top().first;
         arr[1] = j = record.top().second; 
         arr[2] = --p;record.pop();
-        if(visited[i][j]==0 && graph[i][j]==0){
-            total--;
-            visited[i][j]++;
-        }
+        if(visited[i][j]==0 && graph[i][j]==0) total--;
+        visited[i][j]++;
         return arr;
     }
 
     //find new path
     bool walk = false;
-    int visit = 0; struct direc visits(0,0);
+    int visit = 1000; struct direc visits(0,0);
     for(unsigned int k = 0; k < moves.size() ;k++){
         R = moves[k].x;
         C = moves[k].y;
@@ -168,10 +181,9 @@ int* next(int i ,int j,int p){
                 visited[i+R][j+C] = 1; total--;
                 steps.push_back(edge(i+R,j+C));
                 home.push(edge(i+R,j+C));
-                p--;
                 arr[0] = i+R;
                 arr[1] = j+C;
-                arr[2] = p;
+                arr[2] = --p;
                 walk = true;
                 return arr;
             }else if(walk == false){
@@ -179,35 +191,36 @@ int* next(int i ,int j,int p){
                     visit = visited[i+R][j+C];
                     visits.x = i+R;
                     visits.y = j+C;
-                    if(k==moves.size()-1){
-                        visited[visits.x][visits.y] ++;
-                        steps.push_back(edge(visits.x,visits.y));
-                        home.push(edge(visits.x,visits.y));
-                        walk = true;
-                        arr[0] = visits.x;
-                        arr[1] = visits.y;
-                        arr[2] = --p;
-                    }
                 }
             }
         }
     }
+    // if(walk==false && home.size()==1){
+    //     visited[visits.x][visits.y] ++;
+    //     steps.push_back(edge(visits.x,visits.y));
+    //     home.push(edge(visits.x,visits.y));
+    //     walk = true;
+    //     arr[0] = visits.x;
+    //     arr[1] = visits.y;
+    //     arr[2] = --p;
+    //     return arr;
+    // }
     if(walk==false){
         home.pop();
         steps.push_back(home.top());
-        arr[0] = home.top().first;
-        arr[1] = home.top().second; 
+        arr[0] = i = home.top().first;
+        arr[1] = j = home.top().second; visited[i][j]++;
         arr[2] = --p;
+        cout<<"---------"<<rec<<"+++";
         if(rec) record.push(home.top()); 
         if(!rec){
-            i = home.top().first;
-            j = home.top().second;
             for(unsigned int k = 0; k < moves.size() ;k++){
                 R = moves[k].x;
                 C = moves[k].y;
                 if((i+R)<0 || (i+R)>rows-1 || (j+C)<0 ||(j+C)>cols-1 || graph[i+R][j+C]!=0){continue;}
                 if(dist[i+R][j+C] == dist[i][j]+1 && visited[i+R][j+C]==0){
                     record.push(edge(i+R,j+C));
+                    record.push(edge(i,j));
                     rec=true;
                     break;
                 }
@@ -220,7 +233,7 @@ void find_path(int i,int j,int p){
     home.push(edge(i,j));
     int* now = next(i,j,p); 
     while(now[0]!=i ||now[1]!=j || total>0){
-        Sleep(1000);
+        Sleep(500);
         int* nextone = next(now[0],now[1],now[2]); 
         now[0] = nextone[0];
         now[1] = nextone[1];
@@ -236,5 +249,6 @@ void find_path(int i,int j,int p){
         
         cout<<"===================="<<endl;
     }
+    
     return ;
 }
