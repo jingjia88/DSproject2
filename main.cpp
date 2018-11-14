@@ -26,7 +26,7 @@ int **graph;
 int **dist;
 int **visited;
 int arr[3];
-bool rec = false;bool battery = false;
+bool rec = false;bool battery = false;bool out = true;
 int **allocate_Memory(int rows,int cols);
 void distances(int i ,int j);
 void find_path(int p,int k,int pace);
@@ -112,7 +112,6 @@ void distances(int i ,int j){
                 (dist[i+R][j+C]!=0 &&dist[i+R][j+C] < dist[i][j] + 1)){continue;}
         if(!battery && graph[i+R][j+C]==0){
             dist[i+R][j+C] = dist[i][j] + 1;
-            if(dist[i+R][j+C]>pace/2) throw "battery is not enough!";
             distances(i+R,j+C);
             battery = true;
             continue;
@@ -127,8 +126,9 @@ void distances(int i ,int j){
     return ;
 }
 int* next(int i ,int j,int p){
+    if(p<=pace/2) out = false;
     //if out of battery,back to start point
-    if(p <= pace/2 && home.size()>1){ 
+    if(!out && home.size()>1){ 
         home.pop();
         steps.push_back(home.top()); 
         arr[0] = i = home.top().first;
@@ -150,20 +150,20 @@ int* next(int i ,int j,int p){
             }
         }    
         if(home.size()==1){
-            rec = false;
+            rec = false; out=true;
             arr[2] = pace;
             cout<<arr[2];
         }
         return arr;
     }
     //pop out the record path
-    if(!record.empty() && p> pace/2){
+    if(!record.empty() && out){
         if(record.top().first==a && record.top().second==b) record.pop();
         home.push(record.top());
         steps.push_back(record.top());
         arr[0] = i = record.top().first;
         arr[1] = j = record.top().second; 
-        arr[2] = --p;record.pop();
+        arr[2] = --p;record.pop();cout<<i<<"*******"<<j;
         if(visited[i][j]==0 && graph[i][j]==0) total--;
         visited[i][j]++;
         return arr;
@@ -186,27 +186,11 @@ int* next(int i ,int j,int p){
                 arr[2] = --p;
                 walk = true;
                 return arr;
-            }else if(walk == false){
-                if(visit > visited[i+R][j+C]){
-                    visit = visited[i+R][j+C];
-                    visits.x = i+R;
-                    visits.y = j+C;
-                }
             }
         }
     }
-    // if(walk==false && home.size()==1){
-    //     visited[visits.x][visits.y] ++;
-    //     steps.push_back(edge(visits.x,visits.y));
-    //     home.push(edge(visits.x,visits.y));
-    //     walk = true;
-    //     arr[0] = visits.x;
-    //     arr[1] = visits.y;
-    //     arr[2] = --p;
-    //     return arr;
-    // }
     if(walk==false){
-        home.pop();
+        home.pop(); out= false;
         steps.push_back(home.top());
         arr[0] = i = home.top().first;
         arr[1] = j = home.top().second; visited[i][j]++;
