@@ -80,15 +80,15 @@ int main(int argc, char *argv[])
         cout<<steps[i].first<<"/"<<steps[i].second<<" ";
     }
     //output
-    // string arg1 = ".\\"+argf+"\\floor.data";
-    // ofstream outfile(arg1.c_str());
-    // int _size = steps.size();
-    // outfile << _size << '\n';
-    // for (int i = 0; i < _size; i++)
-    //     outfile << steps[i].first << ' ' << steps[i].second  << '\n';
+    string arg1 = ".\\"+argf+"\\final.path";
+    ofstream outfile(arg1.c_str());
+    int _size = steps.size();
+    outfile << _size << '\n';
+    for (int i = 0; i < _size; i++)
+        outfile << steps[i].first << ' ' << steps[i].second  << '\n';
 
-    // infile.close();
-    // outfile.close();
+    infile.close();
+    outfile.close();
 
     return 0;
 }
