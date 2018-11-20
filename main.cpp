@@ -43,11 +43,13 @@ int main(int argc, char *argv[])
         cout<<"Something(Input) wrong"<<endl;
         return 1;
     }
-
+    
+    //allocate memory
     infile >> rows >> cols >> pace;
     graph = allocate_Memory(rows,cols);
     dist = allocate_Memory(rows,cols);
     visited = allocate_Memory(rows,cols);
+
     //read all value
     string value;
     for (int i = 0; i < rows; i++){
@@ -67,6 +69,8 @@ int main(int argc, char *argv[])
     moves.push_back(direc(0,1));
     moves.push_back(direc(0,-1));
     distances(a,b);
+
+    //check battery
     try{
         checkBattery();
     }catch(const char* msg){
@@ -76,11 +80,8 @@ int main(int argc, char *argv[])
 
     //find_path
     find_path(a,b,pace);
-    cout<<steps.size();
-   // for (int i = 0; i < steps.size(); i++){
-   //     cout<<steps[i].first<<"/"<<steps[i].second<<" ";
-   // }
-    //output
+    
+    //optput
     string arg1 = ".\\"+argf+"\\final.path";
     ofstream outfile(arg1.c_str());
     int _size = steps.size();
@@ -90,6 +91,10 @@ int main(int argc, char *argv[])
 
     infile.close();
     outfile.close();
+
+    delete [] graph;
+    delete [] visited;
+    delete [] dist;
 
     return 0;
 }
@@ -103,10 +108,8 @@ int **allocate_Memory(int rows,int cols)
 }
 
 void distances(int i ,int j){
-//for(un,down,left,right)
-//  if(avaible)
-//      dist[i+R][j+C]=dist[i][j] + 1;
-    queue<edge> store;
+    queue<edge> store;      //BFS
+    //find the point to enter the battery
     for(unsigned int k = 0; k < moves.size() ;k++){
         R = moves[k].x;
         C = moves[k].y;
@@ -121,7 +124,6 @@ void distances(int i ,int j){
     store.push(edge(i,j));
     while(!store.empty()){
         i = store.front().first; j =store.front().second; store.pop();
-        //cout<<i<<" "<<j<<" "<<dist[i][j]<<endl;
         for(unsigned int k = 0; k < moves.size() ;k++){
             R = moves[k].x;
             C = moves[k].y;
@@ -140,9 +142,11 @@ void checkBattery(){
         for(int j=0;j<cols;j++)
             if(dist[i][j]>pace/2) throw "battery is not enough!";
 }
+//find next step
 int* next(int i ,int j,int p){
-    if(p<=pace/2) out = false;
     //if out of battery,back to start point
+    if(p<=pace/2) out = false;
+    //no enough battery,back to home
     if(!out && home.size()>1){
         home.pop();
         steps.push_back(home.top());
@@ -234,16 +238,6 @@ void find_path(int i,int j,int p){
         now[0] = nextone[0];
         now[1] = nextone[1];
         now[2] = nextone[2];
-         //cout<<"///"<< total <<"++"<<now[2]<<endl;
-         //for(int ro = 0;ro<rows;ro++){
-         //    for(int co=0;co<cols;co++){
-         //        cout<< visited[ro][co]<<" ";
-
-         //    }
-         //    cout<<endl;
-        // }
-
-        // cout<<"===================="<<endl;
     }
 
     return ;
