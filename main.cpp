@@ -36,14 +36,14 @@ int main(int argc, char *argv[])
 {
     // Open the file with the arguments passed in
     string argf =argv[1];
-    string arg = ".\\"+argf+"\\floor.data";
+    string arg = "./"+argf+"/floor.data";
     ifstream infile(arg.c_str());
 
     if(!infile){
         cout<<"Something(Input) wrong"<<endl;
         return 1;
     }
-    
+
     //allocate memory
     infile >> rows >> cols >> pace;
     graph = allocate_Memory(rows,cols);
@@ -64,10 +64,11 @@ int main(int argc, char *argv[])
     }
 
     //calculate the shortest distance from every vertex to R
-    moves.push_back(direc(1,0));
-    moves.push_back(direc(-1,0));
     moves.push_back(direc(0,1));
+    moves.push_back(direc(-1,0));
     moves.push_back(direc(0,-1));
+    moves.push_back(direc(1,0));
+
     distances(a,b);
 
     //check battery
@@ -80,9 +81,9 @@ int main(int argc, char *argv[])
 
     //find_path
     find_path(a,b,pace);
-    
-    //optput
-    string arg1 = ".\\"+argf+"\\final.path";
+
+    //output
+    string arg1 = "./"+argf+"/final.path";
     ofstream outfile(arg1.c_str());
     int _size = steps.size();
     outfile << _size << '\n';
