@@ -87,8 +87,10 @@ int main(int argc, char *argv[])
     ofstream outfile(arg1.c_str());
     int _size = steps.size();
     outfile << _size << '\n';
-    for (int i = 0; i < _size; i++)
+    for (int i = 0; i < (_size-1); i++)
         outfile << steps[i].first << ' ' << steps[i].second  << '\n';
+        
+    outfile << steps[_size-1].first << ' ' << steps[_size-1].second  ;
 
     infile.close();
     outfile.close();
