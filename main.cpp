@@ -7,7 +7,7 @@
 #include <queue>
 #include <algorithm>
 #include <utility>
-
+#include <windows.h>
 using namespace std;
 
 #define edge pair<int,int>
@@ -25,12 +25,15 @@ int rows,cols,pace;
 int **graph;
 int **dist;
 int **visited;
-int arr[3];
-bool rec = false;bool battery = false;bool out = true;
+int arr[3]; int _firstRow,_firstCol;
+bool rec = false;bool battery = false;bool out = true; 
+bool another =false;bool go = false;
+
 int **allocate_Memory(int rows,int cols);
 void distances(int i ,int j);
 void find_path(int p,int k,int pace);
 void checkBattery();
+void anotherTree(int i,int j);
 int main(int argc, char *argv[])
 {
     // Open the file with the arguments passed in
@@ -131,6 +134,7 @@ void checkBattery(){
         for(int j=0;j<cols;j++)
             if(dist[i][j]>pace/2) throw "battery is not enough!";
 }
+
 //find next step
 int* next(int i ,int j,int p){
     //if out of battery,back to start point
@@ -142,12 +146,14 @@ int* next(int i ,int j,int p){
         arr[0] = i = home.top().first;
         arr[1] = j = home.top().second;
         arr[2] = --p;
+        if(visited[i][j]==0) total--;
         visited[i][j]++;
         if(rec) record.push(home.top());
         if(!rec){
             for(unsigned int k = 0; k < moves.size() ;k++){
                 R = moves[k].x;
                 C = moves[k].y;
+                if(i==a && j==b) break;
                 if((i+R)<0 || (i+R)>rows-1 || (j+C)<0 ||(j+C)>cols-1 || graph[i+R][j+C]!=0){continue;}
                 if(dist[i+R][j+C] == dist[i][j]+1 && visited[i+R][j+C]==0){
                     record.push(edge(i+R,j+C));
@@ -175,7 +181,20 @@ int* next(int i ,int j,int p){
         visited[i][j]++;
         return arr;
     }
-
+    //if this tree is done ,go to another tree
+    if(record.empty() && out && visited[_firstRow][_firstCol] !=0 && go){
+        if(i==a && j==b){
+            anotherTree(_firstRow,_firstCol); 
+            out = false;
+            home.pop();
+            steps.push_back(home.top());
+            arr[0] = i = home.top().first;
+            arr[1] = j = home.top().second;
+            arr[2] = --p;
+            visited[i][j]++;
+            return arr;
+        }
+    }
     //find new path
     bool walk = false;
     struct direc visits(0,0);
@@ -186,6 +205,11 @@ int* next(int i ,int j,int p){
         if(dist[i+R][j+C] == dist[i][j]+1){
             if(walk == false && visited[i+R][j+C]==0){
                 visited[i+R][j+C] = 1; total--;
+                if(dist[i+R][j+C]==1){
+                    _firstRow = i+R;
+                    _firstCol = j+C;
+                    go = true;
+                } 
                 steps.push_back(edge(i+R,j+C));
                 home.push(edge(i+R,j+C));
                 arr[0] = i+R;
@@ -217,17 +241,106 @@ int* next(int i ,int j,int p){
             }
         }
     }
+    another = true;
     return arr;
 }
+
+//go to another tree
+void anotherTree(int i,int j){
+    int starti =i; int startj = j;
+    for(unsigned int k = 0; k < moves.size() ;k++){
+        R = moves[k].x;
+        C = moves[k].y;
+        if((a+R)<0 || (a+R)>rows-1 || (b+C)<0 ||(b+C)>cols-1 || graph[a+R][b+C]==1){continue;}
+        if(dist[a+R][b+C] == dist[a][b]+1 && visited[a+R][b+C]==0){
+            _firstRow = a+R;
+            _firstCol = b+C;
+        }
+    }
+    queue<edge> store;      //BFS
+    int **dist1 = allocate_Memory(rows,cols);
+    for(int q=0;q<rows;q++){
+        for(int w=0;w<cols;w++){
+            dist1[q][w]=0;
+        }
+    }
+    store.push(edge(i,j));dist1[i][j] = 1;
+    while(!store.empty()){
+        i = store.front().first; j =store.front().second; store.pop();
+        for(unsigned int k = 0; k < moves.size() ;k++){
+            R = moves[k].x;
+            C = moves[k].y;
+            if((i+R)>=0 && (i+R)<rows && (j+C)>=0 &&(j+C)<cols){
+                if(graph[i+R][j+C]==0 && (dist1[i+R][j+C] > dist1[i][j] + 1 || (dist1[i+R][j+C]==0))){
+                    dist1[i+R][j+C] = dist1[i][j] + 1;
+                    store.push(edge(i+R,j+C));
+                }
+            }
+        }
+        if(dist1[_firstRow][_firstCol]!=0) break;
+    }
+//     cout<<"%%%%%%%%%%%%%%%%%%%%%%%%%%%"<<endl;
+    
+// for(int q=0;q<rows;q++){
+//     for(int w=0;w<cols;w++){
+//         cout<<dist1[q][w]<<" ";
+//     }
+//     cout<<endl;
+//  }
+// cout<<"///"<<endl;
+// cout<<"%%%%%%%%%%%%%%%%%%%%%%%%%%%"<<endl;
+    
+// for(int q=0;q<rows;q++){
+//     for(int w=0;w<cols;w++){
+//         cout<<dist[q][w]<<" ";
+//     }
+//     cout<<endl;
+// }cout<<"///"<<endl;
+    home.push(edge(_firstRow,_firstCol));
+    i =_firstRow; j = _firstCol;
+    while(i!=starti || j!= startj){
+        for(unsigned int k = 0; k < moves.size() ;k++){
+            R = moves[k].x;
+            C = moves[k].y;
+            if((i+R)>=0 && (i+R)<rows && (j+C)>=0 &&(j+C)<cols){
+                if(dist1[i+R][j+C]==dist1[i][j]-1){
+                    home.push(edge(i+R,j+C));
+                    i = i+R; j = j+C;
+                    break;
+                }
+            }
+        }
+    }
+    return;
+}
+
+
 void find_path(int i,int j,int p){
     home.push(edge(i,j));
     int* now = next(i,j,p);
     while(now[0]!=i ||now[1]!=j || total>0){
+        // for(int q =0;q<rows;q++){
+        //     for(int w =0;w<cols;w++){
+        //        cout<< visited[q][w]<<" ";
+        //     }
+        //     cout<<endl;
+        // }
+        // cout<<"========"<<endl;
+        // stack<edge> tmp;
+        // while(!record.empty()){
+        //     cout<<record.top().first<<record.top().second<<endl;
+        //     tmp.push(record.top());
+        //     record.pop();
+        // }
+        // while(!tmp.empty()){
+        //     record.push(tmp.top());
+        //     tmp.pop();
+        // }
+    
         int* nextone = next(now[0],now[1],now[2]);
         now[0] = nextone[0];
         now[1] = nextone[1];
         now[2] = nextone[2];
     }
-
     return ;
 }
