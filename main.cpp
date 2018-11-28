@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <utility>
 
-
 using namespace std;
 
 #define edge pair<int,int>
@@ -22,21 +21,21 @@ vector<direc> moves;
 vector<edge> steps;
 stack<edge> home,record;
 int a,b;
-int rows,cols,pace;
+int rows,cols,pace; 
 int **graph;
 int **dist;
 int **visited;
 int arr[3];
 bool rec = false;bool battery = false;bool out = true;
 int **allocate_Memory(int rows,int cols);
-void distances(int i ,int j);
+int distances(int i ,int j);
 void find_path(int p,int k,int pace);
 void checkBattery();
 int main(int argc, char *argv[])
 {
     // Open the file with the arguments passed in
     string argf =argv[1];
-    string arg = "./"+argf+"/floor.data";
+    string arg = "./hw/"+argf+"/floor.data";
     ifstream infile(arg.c_str());
 
     if(!infile){
@@ -69,8 +68,29 @@ int main(int argc, char *argv[])
     moves.push_back(direc(0,-1));
     moves.push_back(direc(1,0));
 
-    distances(a,b);
-
+    //find the point to enter the battery
+    int pivot = 0; int max = 100000000; int q,w;
+    for(unsigned int k = 0; k < moves.size() ;k++){
+        R = moves[k].x;
+        C = moves[k].y;
+        if((a+R)<0 || (a+R)>rows-1 || (b+C)<0 ||(b+C)>cols-1){continue;}
+        if(graph[a+R][b+C]==0){
+            if(max > distances(a+R,b+C)){
+                q = a+moves[k].x;
+                w = b+moves[k].y; 
+                max = distances(q,w);
+            }
+            
+            // for(int q = 0;q<rows;q++){
+            //     for(int w = 0;w<cols;w++){
+            //         cout<<dist[q][w]<<" ";
+            //     }
+            //     cout<<"\n";
+            // }
+            // cout<<"============="<<max<<"\n";
+         }
+    }cout<< max;
+    max = distances(q,w);
     //check battery
     try{
         checkBattery();
@@ -83,7 +103,7 @@ int main(int argc, char *argv[])
     find_path(a,b,pace);
 
     //output
-    string arg1 = "./"+argf+"/final.path";
+    string arg1 = "./hw/"+argf+"/final.path";
     ofstream outfile(arg1.c_str());
     int _size = steps.size();
     outfile << _size << '\n';
@@ -110,20 +130,15 @@ int **allocate_Memory(int rows,int cols)
     return res;
 }
 
-void distances(int i ,int j){
-    queue<edge> store;      //BFS
-    //find the point to enter the battery
-    for(unsigned int k = 0; k < moves.size() ;k++){
-        R = moves[k].x;
-        C = moves[k].y;
-        if((i+R)<0 || (i+R)>rows-1 || (j+C)<0 ||(j+C)>cols-1){continue;}
-        if(graph[i+R][j+C]==0){
-            i = i+R;
-            j = j+C; break;
+int distances(int i ,int j){
+    int max = 0;
+    for(int q = 0;q<rows;q++){
+        for(int w=0;w<cols;w++){
+            dist[q][w] = 0;
         }
     }
+    queue<edge> store;      //BFS
     dist[i][j] =1;
-
     store.push(edge(i,j));
     while(!store.empty()){
         i = store.front().first; j =store.front().second; store.pop();
@@ -133,12 +148,13 @@ void distances(int i ,int j){
             if((i+R)>=0 && (i+R)<rows && (j+C)>=0 &&(j+C)<cols){
                 if(graph[i+R][j+C]==0 && (dist[i+R][j+C] > dist[i][j] + 1 || dist[i+R][j+C]==0)){
                     dist[i+R][j+C] = dist[i][j] + 1;
+                    if(max<dist[i+R][j+C]) max = dist[i+R][j+C];
                     store.push(edge(i+R,j+C));
                 }
             }
         }
     }
-    return ;
+    return max; 
 }
 void checkBattery(){
     for(int i =0;i<rows;i++)
