@@ -15,17 +15,14 @@ struct direc{
     int x, y;
     direc(int X, int Y) : x(X), y(Y) {}
 };
-int R,C;
 int total = 0;
 vector<direc> moves;
 vector<edge> steps;
 stack<edge> home,record;
-int a,b;
-int rows,cols,pace; 
-int **graph;
-int **dist;
-int **visited;
-int arr[3]; int _firstRow,_firstCol;
+
+int R,C,a,b,rows,cols,pace; 
+int **graph,**dist,**visited;
+int arr[3], _firstRow,_firstCol;
 bool rec = false;bool battery = false;bool out = true; 
 bool another =false;bool go = false;
 
@@ -72,14 +69,7 @@ int main(int argc, char *argv[])
     moves.push_back(direc(1,0));
 
     distances(a,b);
-    //check battery
-    try{
-        checkBattery();
-    }catch(const char* msg){
-        cout<<msg<<endl;
-        return 0;
-    }
-
+    
     //find_path
     find_path(a,b,pace);
 
@@ -128,11 +118,6 @@ void distances(int i ,int j){
         }
     }
     return; 
-}
-void checkBattery(){
-    for(int i =0;i<rows;i++)
-        for(int j=0;j<cols;j++)
-            if(dist[i][j]>pace/2) throw "battery is not enough!";
 }
 
 //find next step
@@ -279,23 +264,7 @@ void anotherTree(int i,int j){
         }
         if(dist1[_firstRow][_firstCol]!=0) break;
     }
-//     cout<<"%%%%%%%%%%%%%%%%%%%%%%%%%%%"<<endl;
-    
-// for(int q=0;q<rows;q++){
-//     for(int w=0;w<cols;w++){
-//         cout<<dist1[q][w]<<" ";
-//     }
-//     cout<<endl;
-//  }
-// cout<<"///"<<endl;
-// cout<<"%%%%%%%%%%%%%%%%%%%%%%%%%%%"<<endl;
-    
-// for(int q=0;q<rows;q++){
-//     for(int w=0;w<cols;w++){
-//         cout<<dist[q][w]<<" ";
-//     }
-//     cout<<endl;
-// }cout<<"///"<<endl;
+
     home.push(edge(_firstRow,_firstCol));
     i =_firstRow; j = _firstCol;
     while(i!=starti || j!= startj){
@@ -319,24 +288,6 @@ void find_path(int i,int j,int p){
     home.push(edge(i,j));
     int* now = next(i,j,p);
     while(now[0]!=i ||now[1]!=j || total>0){
-        // for(int q =0;q<rows;q++){
-        //     for(int w =0;w<cols;w++){
-        //        cout<< visited[q][w]<<" ";
-        //     }
-        //     cout<<endl;
-        // }
-        // cout<<"========"<<endl;
-        // stack<edge> tmp;
-        // while(!record.empty()){
-        //     cout<<record.top().first<<record.top().second<<endl;
-        //     tmp.push(record.top());
-        //     record.pop();
-        // }
-        // while(!tmp.empty()){
-        //     record.push(tmp.top());
-        //     tmp.pop();
-        // }
-    
         int* nextone = next(now[0],now[1],now[2]);
         now[0] = nextone[0];
         now[1] = nextone[1];
